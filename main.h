@@ -165,7 +165,9 @@ double FindComputerSpeed() {
 }
 
 void FixTimeLimit(int timeLimit) {
+    cerr << "Fixing the time limit..." << "\n" << endl;
     thread run{RunCode, timeLimit, 1};
+    run.join();
 
     cerr << FindComputerSpeed() << "\n";
 }
