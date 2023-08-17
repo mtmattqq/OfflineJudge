@@ -150,6 +150,26 @@ string Encode(){
     return ret;
 }
 
+double FindComputerSpeed() {
+    clock_t start = clock();
+
+    int ans = 0;
+    const int MOD = 37;
+    for(int i = 0; i < 100000000; ++i) {
+        ans = (ans * i) % MOD;
+    }
+
+    clock_t end = clock();
+
+    return double(end - start) / 1000;
+}
+
+void FixTimeLimit(int timeLimit) {
+    thread run{RunCode, timeLimit, 1};
+
+    cerr << FindComputerSpeed() << "\n";
+}
+
 void RunSolution(){
     ifstream log("./TestCase\\log.txt");
 
@@ -176,6 +196,8 @@ void RunSolution(){
             throw CompilationError();
             return;
         }
+
+        FixTimeLimit(timeLimit);
 
         for(int i=1;i<=testCases;++i){
             RunTestCase(i,timeLimit);
