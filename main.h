@@ -39,14 +39,14 @@ void RunCode(int timeLimit,int testCase){
     clock_t start=clock();
     
     int exec_status = system(file.c_str());
+
+    isfinish=true;
+    clock_t end=clock();
+
     if(exec_status != 0) {
         throw runtime_error("");
         return;
     }
-
-    isfinish=true;
-
-    clock_t end=clock();
     
     if(end-start>timeLimit){
         throw TimeLimitExceeded();
@@ -158,18 +158,36 @@ double FindComputerSpeed() {
     for(int i = 0; i < 100000000; ++i) {
         ans = (ans * i) % MOD;
     }
-
-    clock_t end = clock();
+    
+    clock_t end = ans;
+    end = clock();
 
     return double(end - start) / 1000;
 }
 
-void FixTimeLimit(int timeLimit) {
-    cerr << "Fixing the time limit..." << "\n" << endl;
-    thread run{RunCode, timeLimit * 10, 1};
-    run.join();
+double FixTimeLimit(int timeLimit) {
+    cerr << "Fixing the time limit..." << "\n";
+    
+    const int TEST_NUM = 5;
 
-    cerr << FindComputerSpeed() << "\n";
+    for(int i = 0; i < TEST_NUM; ++i) {
+        thread run{RunCode, timeLimit * 10, 1};
+        run.join();
+    }
+    
+    double average = 0;
+    for(int i = 0; i < TEST_NUM; ++i) {
+        average += FindComputerSpeed();
+    }
+    average /= TEST_NUM;
+
+    const double MY_TIME_COST = 0.3764;
+    double multiplier = average / MY_TIME_COST;
+
+    cerr << "Your Computer run " << setprecision(2) << 1.0 / multiplier 
+         << " time \nas fast as the judge." << "\n\n";
+
+    return multiplier;
 }
 
 void RunSolution(){
@@ -177,6 +195,7 @@ void RunSolution(){
 
     string recycle,problemID;
     int testCases,timeLimit;
+    double multiplier;
 
     log>>recycle>>testCases;
     log>>recycle>>timeLimit;
@@ -185,8 +204,8 @@ void RunSolution(){
     ofstream output("output.info");
 
     cerr<<"Problem ID : "<<problemID<<"\n";
-    cerr<<"There're "<<testCases<<" testcases."<<"\n";
-    cerr<<"Running TestCase..."<<"\n";
+    cerr<<"There're "<<testCases<<" testcases."<<"\n\n";
+    
 
     output<<"Problem ID : "<<problemID<<"\n";
     output<<"There're "<<testCases<<" testcases."<<"\n";
@@ -199,7 +218,11 @@ void RunSolution(){
             return;
         }
 
-        // FixTimeLimit(timeLimit);
+        multiplier = FixTimeLimit(timeLimit);
+
+        timeLimit *= multiplier;
+
+        cerr<<"Running TestCase..."<<"\n";
 
         for(int i=1;i<=testCases;++i){
             RunTestCase(i,timeLimit);
@@ -267,6 +290,10 @@ void RunSolution(){
     string ret[2]{"WA","AC"};
     cerr<<"For each testcase : "<<"\n\n";
     output<<"For each testcase : "<<"\n\n";
+
+    for(int i=1;i<=testCases;++i){
+        costTime[i-1] /= multiplier;
+    }
     for(int i=1;i<=testCases;++i){
         cerr<<right<<setw(3)<<i<<". "<<flush;
         cerr<<ret[outputCorrect[i]]<<"  "<<flush;
