@@ -158,8 +158,9 @@ double FindComputerSpeed() {
     for(int i = 0; i < 100000000; ++i) {
         ans = (ans * i) % MOD;
     }
-    
+
     clock_t end = ans;
+    
     end = clock();
 
     return double(end - start) / 1000;
