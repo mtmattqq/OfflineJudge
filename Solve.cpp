@@ -2,9 +2,9 @@
 #include<bits/stdc++.h>
 using namespace std;
 
-int main(){
+int main() {
     // code
-    int a,b;
-    cin>>a>>b;
-    cout<<a+b;
+    int a, b;
+    cin >> a >> b;
+    cout << a - b;
 }

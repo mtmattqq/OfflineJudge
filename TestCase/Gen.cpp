@@ -18,7 +18,7 @@ long long RandomNumber(long long n){
 }
 
 int solve(int i){
-    string file = "Sol / < " + to_string(i) + ".in" + "> " + to_string(i) + ".out";
+    string file = "./Sol < " + to_string(i) + ".in" + "> " + to_string(i) + ".out";
     
     int exec_status = system(file.c_str());
     if (exec_status != 0) {
@@ -79,5 +79,4 @@ int main(){
     clock_t endTime=clock();
 
     cerr<<double(endTime-startTime)/1000<<"\n";
-    getchar();
 }

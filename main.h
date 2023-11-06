@@ -33,8 +33,8 @@ void RunCode(int timeLimit,int testCase){
     isfinish=false;
 
     string file = 
-        "Sol / < ./TestCase\\" + to_string(testCase) + ".in" + 
-        "> ./TestCase\\sol" + to_string(testCase) + ".out";
+        "./Sol < ./TestCase/" + to_string(testCase) + ".in" + 
+        "> ./TestCase/sol" + to_string(testCase) + ".out";
 
     clock_t start=clock();
     
@@ -91,9 +91,9 @@ bool RunTestCase(int testCase,int timeLimit){
 }
 
 bool Judge(int testCase){
-    ifstream userOutput("./TestCase\\sol"+to_string(testCase)+".out");
-    ifstream question("./TestCase\\"+to_string(testCase)+".in");
-    ifstream answer("./TestCase\\"+to_string(testCase)+".out");
+    ifstream userOutput("./TestCase/sol"+to_string(testCase)+".out");
+    ifstream question("./TestCase/"+to_string(testCase)+".in");
+    ifstream answer("./TestCase/"+to_string(testCase)+".out");
 
     string tp,userAns,systemAns;
 
@@ -163,19 +163,13 @@ double FindComputerSpeed() {
     
     end = clock();
 
-    return double(end - start) / 1000;
+    return double(end - start) / 1000000;
 }
 
 double FixTimeLimit(int timeLimit) {
     cerr << "Fixing the time limit..." << "\n";
     
     const int TEST_NUM = 5;
-
-    for(int i = 0; i < TEST_NUM; ++i) {
-        thread run{RunCode, timeLimit * 10, 1};
-        run.join();
-    }
-    
     double average = 0;
     for(int i = 0; i < TEST_NUM; ++i) {
         average += FindComputerSpeed();
@@ -192,7 +186,7 @@ double FixTimeLimit(int timeLimit) {
 }
 
 void RunSolution(){
-    ifstream log("./TestCase\\log.txt");
+    ifstream log("./TestCase/log.txt");
 
     string recycle,problemID;
     int testCases,timeLimit;
@@ -219,7 +213,7 @@ void RunSolution(){
             return;
         }
 
-        multiplier = FixTimeLimit(timeLimit);
+        multiplier = FixTimeLimit(timeLimit) * 1000;
 
         timeLimit *= multiplier;
 
