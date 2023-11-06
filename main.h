@@ -33,7 +33,7 @@ void RunCode(int timeLimit,int testCase){
     isfinish=false;
 
     string file = 
-        "Sol / < ./TestCase\\" + to_string(testCase) + ".in" + 
+        "./Sol / < ./TestCase\\" + to_string(testCase) + ".in" + 
         "> ./TestCase\\sol" + to_string(testCase) + ".out";
 
     clock_t start=clock();
@@ -163,7 +163,7 @@ double FindComputerSpeed() {
     
     end = clock();
 
-    return double(end - start) / 1000;
+    return double(end - start) / 1000000;
 }
 
 double FixTimeLimit(int timeLimit) {
