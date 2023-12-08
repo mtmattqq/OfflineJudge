@@ -4,15 +4,18 @@
 #include <algorithm>
 #include <random>
 #include <cassert>
+#include <chrono>
+
 #include "GraphGen.h"
 #include "tower.h"
-using namespace std;
 
 #define ALL(v) v.begin(),v.end()
-using ll=long long;
+using ll = long long;
 
-int solve(int i){
-    string file = "./Sol < " + to_string(i) + ".in" + "> " + to_string(i) + ".out";
+const int SHIFT = 17682;
+
+int solve(int i) {
+    std::string file = "./Sol < " + to_string(i) + ".in" + "> " + to_string(i) + ".out";
     
     int exec_status = system(file.c_str());
     if(exec_status != 0) {
@@ -28,41 +31,63 @@ void SubTesk1(int a){
 
     std::ofstream ques(fileName + ".in");
 
-    const int SHIFT = 17682;
     random_number_generater rng(a * 10 + SHIFT);
 
-    int height = 3;
-    // int height = rng(1, 100);
+    int height = a * 2 + 1;
     tower tow(height, rng);
 
     ques << height << "\n" << tow;
+}
 
+void SubTesk2(int a){
+    std::string fileName = to_string(a);
 
-    std::cerr<<a<<endl;
+    std::ofstream ques(fileName + ".in");
+
+    random_number_generater rng(a * 10 + SHIFT);
+
+    int height = rng(45, 49) * 2 + 1;
+    tower tow(height, rng);
+
+    ques << height << "\n" << tow;
 }
 
 #define REP(i,a,b) for(int i=(a);i<=(b);++i)
 int main(){
     ios::sync_with_stdio(0);cin.tie(0);
     
-    int compile_status = system("g++ Sol.cpp -o Sol");
+    int compile_status = system("g++ Sol.cpp -std=c++14 -O2 -o Sol");
     if(compile_status != 0) {
         std::cerr << "Compilation failed.\n";
         return 1;
+    } else {
+        std::cerr << "Compilation success\n";
     }
 
     const int TEST_CASE = 10;
 
-    clock_t startTime=clock();
-    REP(i, 1, TEST_CASE){
+    using time_point = std::chrono::steady_clock::time_point;
+    time_point start = std::chrono::steady_clock::now();
+    
+    REP(i, 1, 5){
         SubTesk1(i);
+        std::cerr << "Finishing generating the tower " << i << "\n";
+    }
+
+    REP(i, 6, TEST_CASE){
+        SubTesk2(i);
+        std::cerr << "Finishing generating the tower " << i << "\n";
     }
 
     REP(i, 1, TEST_CASE){
         solve(i);
+        std::cerr << "Successfully solve testcase : " << i << "\n";
     }
 
-    clock_t endTime=clock();
+    time_point end = std::chrono::steady_clock::now();
 
-    cerr << double(endTime - startTime) / CLOCKS_PER_SEC << "\n";
+    cerr << "Total time : " << 
+        double(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+            .count()) / 1000.0 
+         << "\n";
 }

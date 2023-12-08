@@ -6,7 +6,7 @@
 // #include "Solve.h"
 using namespace std;
 
-bool isfinish=false;
+bool isfinish = false;
 vector<int> costTime;
 const int CODE_LENGTH=12;
 
@@ -39,6 +39,7 @@ void RunCode(int timeLimit,int testCase){
     clock_t start=clock();
     
     int exec_status = system(file.c_str());
+
 
     isfinish=true;
     clock_t end=clock();
