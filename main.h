@@ -44,20 +44,24 @@ void RunCode(int timeLimit,int testCase) {
         "./Sol < ./TestCase/" + std::to_string(testCase) + ".in" + 
         "> ./TestCase/sol" + std::to_string(testCase) + ".out";
 
-    std::clock_t start = std::clock();
+    time_point start = std::chrono::steady_clock::now();
     
     int exec_status = std::system(file.c_str());
 
 
     isfinish = true;
-    std::clock_t end = std::clock();
+    time_point end = std::chrono::steady_clock::now();
 
     if(exec_status != 0) {
         throw std::runtime_error("");
         return;
     }
     
-    if(end-start>timeLimit) {
+    uint32_t time_cost = 
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+        .count();
+
+    if(time_cost > timeLimit) {
         throw TimeLimitExceeded();
         return;
     }
@@ -158,7 +162,7 @@ double FindComputerSpeed() {
         ans = (ans * i) % MOD;
     }
 
-    std::cerr << " Hash value = " << ans;
+    std::cerr << " Hash value = " << ans << "\n";
     
     time_point end = std::chrono::steady_clock::now();
 
@@ -177,6 +181,7 @@ double FixTimeLimit(int timeLimit) {
     average /= TEST_NUM;
 
     const double MY_TIME_COST = 0.3764;
+    std::cerr << average;
     double multiplier = average / MY_TIME_COST;
 
     std::cerr << "Your Computer run " << std::setprecision(2) << 1.0 / multiplier 
