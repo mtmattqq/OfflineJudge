@@ -57,7 +57,7 @@ void RunCode(int timeLimit,int testCase) {
         return;
     }
     
-    uint32_t time_cost = 
+    int64_t time_cost = 
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
         .count();
 
@@ -66,7 +66,7 @@ void RunCode(int timeLimit,int testCase) {
         return;
     }
 
-    costTime.emplace_back(end - start);
+    costTime.emplace_back(time_cost);
     return;
 }
 
@@ -161,8 +161,6 @@ double FindComputerSpeed() {
     for(int i = 0; i < TIME; ++i) {
         ans = (ans * i) % MOD;
     }
-
-    std::cerr << " Hash value = " << ans << "\n";
     
     time_point end = std::chrono::steady_clock::now();
 
@@ -180,8 +178,7 @@ double FixTimeLimit(int timeLimit) {
     }
     average /= TEST_NUM;
 
-    const double MY_TIME_COST = 0.3764;
-    std::cerr << average;
+    const double MY_TIME_COST = 0.3495;
     double multiplier = average / MY_TIME_COST;
 
     std::cerr << "Your Computer run " << std::setprecision(2) << 1.0 / multiplier 
@@ -232,7 +229,7 @@ void RunSolution(){
     } catch(TimeLimitExceeded) {
         std::ifstream TLE("TLE");
         std::string line;
-        while(std::getline(TLE,line)) {
+        while(std::getline(TLE, line)) {
             std::cerr << line << "\n";
         }
         std::cerr << std::flush;
@@ -248,7 +245,7 @@ void RunSolution(){
     } catch(std::exception) {
         std::ifstream RE("RE");
         std::string line;
-        while(std::getline(RE,line)) {
+        while(std::getline(RE, line)) {
             std::cerr << line << "\n";
         }
         std::cerr << std::flush;
@@ -269,7 +266,7 @@ void RunSolution(){
     if(allCorrect) {
         std::ifstream AC("AC");
         std::string line;
-        while(getline(AC,line)) {
+        while(getline(AC, line)) {
             std::cerr << line << "\n";
             output << line << "\n";
         }
@@ -277,7 +274,7 @@ void RunSolution(){
     } else {
         std::ifstream WA("WA");
         std::string line;
-        while(getline(WA,line)) {
+        while(getline(WA, line)) {
             std::cerr << line << "\n";
             output << line << "\n";
         }
@@ -292,7 +289,7 @@ void RunSolution(){
         costTime[i-1] /= multiplier;
     }
 
-    for(int i=1;i<=testCases;++i){
+    for(int i=1;i<=testCases;++i) {
         std::cerr << std::right << std::setw(3) << i << ". " << std::flush;
         std::cerr << ret[outputCorrect[i]] << "  " << std::flush;
         std::cerr << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
@@ -308,8 +305,6 @@ void RunSolution(){
         std::cerr<<"AC code : " << code << std::endl;
         output << "AC code : " << code << std::endl;
     }
-
-    getchar();
 }
 
 #endif

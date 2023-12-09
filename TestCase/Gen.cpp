@@ -6,6 +6,7 @@
 #include <cassert>
 #include <chrono>
 
+#include "Rng.h"
 #include "GraphGen.h"
 
 #define ALL(v) v.begin(),v.end()
@@ -32,7 +33,7 @@ void SubTesk1(int a){
 
     random_number_generater rng(a * 10 + SHIFT);
 
-    int height = a * 2 + 1;
+    ques << rng(1000) << rng(1000);
 }
 
 void SubTesk2(int a){
@@ -42,12 +43,13 @@ void SubTesk2(int a){
 
     random_number_generater rng(a * 10 + SHIFT);
 
-    int height = rng(45, 49) * 2 + 1;
+    ques << rng(1000000) << rng(1000000);
 }
 
 #define REP(i,a,b) for(int i=(a);i<=(b);++i)
-int main(){
-    std::ios::sync_with_stdio(0);std::cin.tie(0);
+int main() {
+    std::ios::sync_with_stdio(0);
+    std::cin.tie(0);
     
     int compile_status = system("g++ Sol.cpp -std=c++14 -O2 -o Sol");
     if(compile_status != 0) {
@@ -62,17 +64,17 @@ int main(){
     using time_point = std::chrono::steady_clock::time_point;
     time_point start = std::chrono::steady_clock::now();
     
-    REP(i, 1, 5){
+    REP(i, 1, 5) {
         SubTesk1(i);
         std::cerr << "Finishing generating the tower " << i << "\n";
     }
 
-    REP(i, 6, TEST_CASE){
+    REP(i, 6, TEST_CASE) {
         SubTesk2(i);
         std::cerr << "Finishing generating the tower " << i << "\n";
     }
 
-    REP(i, 1, TEST_CASE){
+    REP(i, 1, TEST_CASE) {
         solve(i);
         std::cerr << "Successfully solve testcase : " << i << "\n";
     }
