@@ -33,7 +33,7 @@ void SubTesk1(int a){
 
     random_number_generater rng(a * 10 + SHIFT);
 
-    ques << rng(1000) << rng(1000);
+    ques << rng(1000) << " " << rng(1000) << "\n";
 }
 
 void SubTesk2(int a){
@@ -43,7 +43,7 @@ void SubTesk2(int a){
 
     random_number_generater rng(a * 10 + SHIFT);
 
-    ques << rng(1000000) << rng(1000000);
+    ques << rng(1000000) << " " << rng(1000000) << "\n";
 }
 
 #define REP(i,a,b) for(int i=(a);i<=(b);++i)

@@ -75,9 +75,17 @@ bool RunTestCase(int testCase, int timeLimit){
 
     std::thread run{RunCode, timeLimit,testCase};
 
-    std::clock_t start = clock();
+    time_point start = std::chrono::steady_clock::now();
 
-    while(!isfinish && clock()-start<=timeLimit);
+    while(!isfinish) {
+        time_point now = std::chrono::steady_clock::now();
+        int64_t time_cost = 
+            std::chrono::duration_cast<std::chrono::milliseconds>(now - start)
+            .count();
+        if(time_cost > timeLimit) {
+            break;
+        }
+    }
 
     // chrono::milliseconds s(timeLimit+20);
     // this_thread::sleep_for(s);
@@ -215,7 +223,7 @@ void RunSolution(){
             return;
         }
 
-        multiplier = FixTimeLimit(timeLimit) * 1000;
+        multiplier = FixTimeLimit(timeLimit);
 
         timeLimit *= multiplier;
 
@@ -252,11 +260,13 @@ void RunSolution(){
         std::exit(0);
     }
 
+    int correct = 0;
     bool allCorrect = true;
     std::vector<bool> outputCorrect(testCases + 1);
 
     for(int i = 1; i <= testCases; ++i) {
         outputCorrect[i] = Judge(i);
+        correct += outputCorrect[i];
         if(!outputCorrect[i]) {
             allCorrect = false;
         }
@@ -286,10 +296,10 @@ void RunSolution(){
     output << "For each testcase : " << "\n\n";
 
     for(int i = 1; i <= testCases; ++i) {
-        costTime[i-1] /= multiplier;
+        costTime[i - 1] /= multiplier;
     }
 
-    for(int i=1;i<=testCases;++i) {
+    for(int i = 1; i <= testCases; ++i) {
         std::cerr << std::right << std::setw(3) << i << ". " << std::flush;
         std::cerr << ret[outputCorrect[i]] << "  " << std::flush;
         std::cerr << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
@@ -297,6 +307,9 @@ void RunSolution(){
         output << ret[outputCorrect[i]] << "  " << std::flush;
         output << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
     }
+    std::cerr << "Total score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
+    output << "Total score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
+
     std::cerr << std::endl;
     output << std::endl;
 

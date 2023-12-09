@@ -6,5 +6,7 @@ int main() {
     // code
     int a, b;
     cin >> a >> b;
-    cout << a - b;
+    cout << a + b;
+    chrono::milliseconds s(100);
+    this_thread::sleep_for(s);
 }

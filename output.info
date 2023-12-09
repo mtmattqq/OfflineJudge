@@ -1,0 +1,24 @@
+Problem ID : Default
+There're 10 testcases.
+           _____ 
+    /\    / ____|
+   /  \  | |     
+  / /\ \ | |     
+ / ____ \| |____ 
+/_/    \_\\_____|
+                 
+For each testcase : 
+
+  1. AC  Execution time :  102 ms
+  2. AC  Execution time :  103 ms
+  3. AC  Execution time :  105 ms
+  4. AC  Execution time :  106 ms
+  5. AC  Execution time :  106 ms
+  6. AC  Execution time :  105 ms
+  7. AC  Execution time :  105 ms
+  8. AC  Execution time :  106 ms
+  9. AC  Execution time :  106 ms
+ 10. AC  Execution time :  105 ms
+Total score : 100.00
+
+AC code : 1610004605506644385914353
