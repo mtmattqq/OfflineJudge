@@ -7,7 +7,6 @@
 #include <chrono>
 
 #include "GraphGen.h"
-#include "tower.h"
 
 #define ALL(v) v.begin(),v.end()
 using ll = long long;
@@ -15,9 +14,9 @@ using ll = long long;
 const int SHIFT = 17682;
 
 int solve(int i) {
-    std::string file = "./Sol < " + to_string(i) + ".in" + "> " + to_string(i) + ".out";
+    std::string file = "./Sol < " + std::to_string(i) + ".in" + "> " + std::to_string(i) + ".out";
     
-    int exec_status = system(file.c_str());
+    int exec_status = std::system(file.c_str());
     if(exec_status != 0) {
         std::cerr << "Execution failed.\n";
         return 1;
@@ -27,34 +26,28 @@ int solve(int i) {
 }
 
 void SubTesk1(int a){
-    std::string fileName = to_string(a);
+    std::string fileName = std::to_string(a);
 
     std::ofstream ques(fileName + ".in");
 
     random_number_generater rng(a * 10 + SHIFT);
 
     int height = a * 2 + 1;
-    tower tow(height, rng);
-
-    ques << height << "\n" << tow;
 }
 
 void SubTesk2(int a){
-    std::string fileName = to_string(a);
+    std::string fileName = std::to_string(a);
 
     std::ofstream ques(fileName + ".in");
 
     random_number_generater rng(a * 10 + SHIFT);
 
     int height = rng(45, 49) * 2 + 1;
-    tower tow(height, rng);
-
-    ques << height << "\n" << tow;
 }
 
 #define REP(i,a,b) for(int i=(a);i<=(b);++i)
 int main(){
-    ios::sync_with_stdio(0);cin.tie(0);
+    std::ios::sync_with_stdio(0);std::cin.tie(0);
     
     int compile_status = system("g++ Sol.cpp -std=c++14 -O2 -o Sol");
     if(compile_status != 0) {
@@ -86,7 +79,7 @@ int main(){
 
     time_point end = std::chrono::steady_clock::now();
 
-    cerr << "Total time : " << 
+    std::cerr << "Total time : " << 
         double(std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
             .count()) / 1000.0 
          << "\n";

@@ -1,8 +1,15 @@
-#include<bits/stdc++.h>
-#include "Rng.h"
-
 #ifndef GRAPH_GEN
 #define GRAPH_GEN
+
+#include <iostream>
+#include <fstream>
+#include <cstdint>
+#include <algorithm>
+#include <random>
+#include <cassert>
+#include <chrono>
+#include <vector>
+#include "Rng.h"
 
 uint32_t sd=std::chrono::steady_clock().now().time_since_epoch().count();
 
@@ -64,9 +71,9 @@ private :
         }
     };
 public :
-    static std::vector<pair<int,int>> GenTree(int n){// nodes 1~n
+    static std::vector<std::pair<int,int>> GenTree(int n){// nodes 1~n
         DSU dsu(n);
-        std::vector<pair<int,int>> result;
+        std::vector<std::pair<int,int>> result;
         random_number_generater rng(sd);
 
         while(result.size()<n-1){
@@ -80,8 +87,8 @@ public :
         return result;
     }
 
-    static std::vector<pair<int,int>> GenConnectedGraph(int n,int m){// n nodes m edges, m need to bigger than n-1
-        std::vector<pair<int,int>> result=GenTree(n);
+    static std::vector<std::pair<int,int>> GenConnectedGraph(int n,int m){// n nodes m edges, m need to bigger than n-1
+        std::vector<std::pair<int,int>> result=GenTree(n);
         random_number_generater rng(sd);
 
         for(int i=0;i<m-n+1;++i){
@@ -97,8 +104,8 @@ public :
         return result;
     }
     
-    static std::vector<pair<int,int>> GenGraph(int n,int m){// n nodes m edges, m need to bigger than n-1
-        std::vector<pair<int,int>> result;
+    static std::vector<std::pair<int,int>> GenGraph(int n,int m){// n nodes m edges, m need to bigger than n-1
+        std::vector<std::pair<int,int>> result;
         random_number_generater rng(sd);
 
         for(int i=0;i<m;++i){
