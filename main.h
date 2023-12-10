@@ -15,7 +15,7 @@
 using time_point = std::chrono::steady_clock::time_point;
 
 bool isfinish = false;
-int status = 0;
+int status = 0, currentTest = 0;
 std::vector<int> costTime;
 const int CODE_LENGTH=12;
 const int SUCCESS = 0;
@@ -45,6 +45,10 @@ void RunCode(int timeLimit,int testCase) {
     
     int exec_status = std::system(file.c_str());
 
+    if(currentTest != testCase) {
+        costTime.emplace_back(timeLimit + 50);
+        return;
+    }
 
     isfinish = true;
     time_point end = std::chrono::steady_clock::now();
@@ -72,7 +76,9 @@ int RunTestCase(int testCase, int timeLimit){
     std::string fileNum = std::to_string(testCase);
 
     status = -1;
-    std::thread run{RunCode, timeLimit,testCase};
+    isfinish = false;
+    currentTest = testCase;
+    std::thread run{RunCode, timeLimit, testCase};
 
     time_point start = std::chrono::steady_clock::now();
 
@@ -245,7 +251,7 @@ void RunSolution(){
     int statusFlag = 0;
 
     for(int i = 1; i <= testCases; ++i) {
-        if(outputStatus[i] != SUCCESS) {
+        if(outputStatus[i] == SUCCESS) {
             outputStatus[i] = Judge(i);
         }
         correct += outputStatus[i] == AC;
@@ -290,7 +296,11 @@ void RunSolution(){
         std::cerr << std::flush;
     }
 
-    std::string ret[2]{"WA", "AC"};
+    std::string ret[20];
+    ret[WA] = "WA";
+    ret[AC] = "AC";
+    ret[TIME_OUT] = "TLE";
+    ret[RUNTIME_ERROR] = "RE";
     std::cerr << "For each testcase : " << "\n\n";
     output << "For each testcase : " << "\n\n";
 
@@ -300,14 +310,14 @@ void RunSolution(){
 
     for(int i = 1; i <= testCases; ++i) {
         std::cerr << std::right << std::setw(3) << i << ". " << std::flush;
-        std::cerr << ret[outputStatus[i]] << "  " << std::flush;
+        std::cerr << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
         std::cerr << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
         output << std::right << std::setw(3) << i << ". " << std::flush;
-        output << ret[outputStatus[i]] << "  " << std::flush;
+        output << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
         output << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
     }
-    std::cerr << "Total score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
-    output << "Total score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
+    std::cerr << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
+    output << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
 
     std::cerr << std::endl;
     output << std::endl;
