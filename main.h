@@ -264,7 +264,7 @@ void RunSolution(){
             output << line << "\n";
         }
         std::cerr << std::flush;
-    } else if(statusFlag | TIME_OUT) {
+    } else if(statusFlag & TIME_OUT) {
         std::ifstream TLE("TLE");
         std::string line;
         while(std::getline(TLE, line)) {
@@ -272,7 +272,7 @@ void RunSolution(){
             output << line << "\n";
         }
         std::cerr << std::flush;
-    } else if(statusFlag | RUNTIME_ERROR) {
+    } else if(statusFlag & RUNTIME_ERROR) {
         std::ifstream RE("RE");
         std::string line;
         while(std::getline(RE, line)) {
