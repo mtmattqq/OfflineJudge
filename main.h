@@ -15,18 +15,14 @@
 using time_point = std::chrono::steady_clock::time_point;
 
 bool isfinish = false;
+int status = 0;
 std::vector<int> costTime;
 const int CODE_LENGTH=12;
-
-class TimeLimitExceeded : public std::exception{
-    public :
-        TimeLimitExceeded() : exception() {}
-};
-
-class CompilationError : public std::exception{
-    public :
-        CompilationError() : exception() {}
-};
+const int SUCCESS = 0;
+const int AC = 1;
+const int WA = 2;
+const int TIME_OUT = 4;
+const int RUNTIME_ERROR = 8;
 
 int64_t RandomNumber(int64_t a, int64_t b, std::mt19937_64 &rng) {
     std::uniform_int_distribution<int64_t> dis(a,b);
@@ -39,6 +35,7 @@ int64_t RandomNumber(int64_t n, std::mt19937_64 &rng) {
 
 void RunCode(int timeLimit,int testCase) {
     isfinish = false;
+    status = TIME_OUT;
 
     std::string file = 
         "./Sol < ./TestCase/" + std::to_string(testCase) + ".in" + 
@@ -53,7 +50,7 @@ void RunCode(int timeLimit,int testCase) {
     time_point end = std::chrono::steady_clock::now();
 
     if(exec_status != 0) {
-        throw std::runtime_error("");
+        status = RUNTIME_ERROR;
         return;
     }
     
@@ -62,17 +59,19 @@ void RunCode(int timeLimit,int testCase) {
         .count();
 
     if(time_cost > timeLimit) {
-        throw TimeLimitExceeded();
+        status = TIME_OUT;
         return;
     }
 
+    status = SUCCESS;
     costTime.emplace_back(time_cost);
     return;
 }
 
-bool RunTestCase(int testCase, int timeLimit){
+int RunTestCase(int testCase, int timeLimit){
     std::string fileNum = std::to_string(testCase);
 
+    status = -1;
     std::thread run{RunCode, timeLimit,testCase};
 
     time_point start = std::chrono::steady_clock::now();
@@ -91,12 +90,12 @@ bool RunTestCase(int testCase, int timeLimit){
     // this_thread::sleep_for(s);
     
     if(!isfinish) {
+        status = TIME_OUT;
         run.detach();
-        throw TimeLimitExceeded();
-        return false;
+        return TIME_OUT;
     } else {
         run.join();
-        return true;
+        return status;
     }
 }
 
@@ -215,61 +214,45 @@ void RunSolution(){
     output << "Problem ID : " << problemID << "\n";
     output << "There're " << testCases << " testcases." << "\n";
 
-    try {
-        int compile_status = std::system("g++ Solve.cpp -O2 -o Sol");
-        if(compile_status != 0) {
-            std::cerr << "Compilation failed.\n";
-            throw CompilationError();
-            return;
-        }
-
-        multiplier = FixTimeLimit(timeLimit);
-
-        timeLimit *= multiplier;
-
-        std::cerr << "Running TestCase..." << "\n";
-
-        for(int i = 1; i <= testCases; ++i) {
-            RunTestCase(i, timeLimit);
-            std::cerr << i << " ";
-        }
-        std::cerr << "\n\n";
-    } catch(TimeLimitExceeded) {
-        std::ifstream TLE("TLE");
-        std::string line;
-        while(std::getline(TLE, line)) {
-            std::cerr << line << "\n";
-        }
-        std::cerr << std::flush;
-        std::exit(0);
-    } catch(CompilationError) {
+    int compile_status = std::system("g++ Solve.cpp -O2 -o Sol");
+    if(compile_status != 0) {
+        std::cerr << "Compilation failed.\n";
         std::ifstream CE("CE");
         std::string line;
         while(std::getline(CE, line)) {
             std::cerr << line << "\n";
         }
         std::cerr << std::flush;
-        std::exit(0);
-    } catch(std::exception) {
-        std::ifstream RE("RE");
-        std::string line;
-        while(std::getline(RE, line)) {
-            std::cerr << line << "\n";
-        }
-        std::cerr << std::flush;
-        std::exit(0);
+        return;
     }
+
+    multiplier = FixTimeLimit(timeLimit);
+
+    timeLimit *= multiplier;
+
+    std::cerr << "Running TestCase..." << "\n";
+
+    std::vector<int> outputStatus(testCases + 1);
+    for(int i = 1; i <= testCases; ++i) {
+        int st = RunTestCase(i, timeLimit);
+        outputStatus[i] = st;
+        std::cerr << i << " ";
+    }
+    std::cerr << "\n\n";
 
     int correct = 0;
     bool allCorrect = true;
-    std::vector<bool> outputCorrect(testCases + 1);
+    int statusFlag = 0;
 
     for(int i = 1; i <= testCases; ++i) {
-        outputCorrect[i] = Judge(i);
-        correct += outputCorrect[i];
-        if(!outputCorrect[i]) {
+        if(outputStatus[i] != SUCCESS) {
+            outputStatus[i] = Judge(i);
+        }
+        correct += outputStatus[i] == AC;
+        if(outputStatus[i] != AC) {
             allCorrect = false;
         }
+        statusFlag |= outputStatus[i];
     }
 
     std::cerr << "\n";
@@ -277,6 +260,22 @@ void RunSolution(){
         std::ifstream AC("AC");
         std::string line;
         while(getline(AC, line)) {
+            std::cerr << line << "\n";
+            output << line << "\n";
+        }
+        std::cerr << std::flush;
+    } else if(statusFlag | TIME_OUT) {
+        std::ifstream TLE("TLE");
+        std::string line;
+        while(std::getline(TLE, line)) {
+            std::cerr << line << "\n";
+            output << line << "\n";
+        }
+        std::cerr << std::flush;
+    } else if(statusFlag | RUNTIME_ERROR) {
+        std::ifstream RE("RE");
+        std::string line;
+        while(std::getline(RE, line)) {
             std::cerr << line << "\n";
             output << line << "\n";
         }
@@ -301,10 +300,10 @@ void RunSolution(){
 
     for(int i = 1; i <= testCases; ++i) {
         std::cerr << std::right << std::setw(3) << i << ". " << std::flush;
-        std::cerr << ret[outputCorrect[i]] << "  " << std::flush;
+        std::cerr << ret[outputStatus[i]] << "  " << std::flush;
         std::cerr << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
         output << std::right << std::setw(3) << i << ". " << std::flush;
-        output << ret[outputCorrect[i]] << "  " << std::flush;
+        output << ret[outputStatus[i]] << "  " << std::flush;
         output << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
     }
     std::cerr << "Total score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
