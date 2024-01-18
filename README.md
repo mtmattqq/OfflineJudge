@@ -90,7 +90,7 @@ ProblemID: Default
 | RunTestCase(int testCase,int timeLimit) | 完成執行第 testCase 筆測試資料所需的前置條件 |
 | Judge(int testCase) | 評判解答正確性 |
 | RunSolution() | 執行所有測試並輸出結果 |
-| EnCode() | AC時回傳密碼 |
+| Encode() | AC時回傳密碼(預設的加密演算法安全性很低，需要修改) |
 
 ## 競賽中不會出現的 C++ 功能
 
