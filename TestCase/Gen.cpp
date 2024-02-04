@@ -66,12 +66,12 @@ int main() {
     
     REP(i, 1, 5) {
         SubTesk1(i);
-        std::cerr << "Finishing generating the tower " << i << "\n";
+        std::cerr << "Finishing generating the test " << i << "\n";
     }
 
     REP(i, 6, TEST_CASE) {
         SubTesk2(i);
-        std::cerr << "Finishing generating the tower " << i << "\n";
+        std::cerr << "Finishing generating the test " << i << "\n";
     }
 
     REP(i, 1, TEST_CASE) {

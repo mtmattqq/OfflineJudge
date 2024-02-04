@@ -17,7 +17,7 @@ using time_point = std::chrono::steady_clock::time_point;
 bool isfinish = false;
 int status = 0, currentTest = 0;
 std::vector<int> costTime;
-const int CODE_LENGTH=12;
+const int CODE_LENGTH = 12;
 const int SUCCESS = 0;
 const int AC = 1;
 const int WA = 2;
