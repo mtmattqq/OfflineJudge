@@ -25,12 +25,12 @@ const int TIME_OUT = 4;
 const int RUNTIME_ERROR = 8;
 
 int64_t RandomNumber(int64_t a, int64_t b, std::mt19937_64 &rng) {
-    std::uniform_int_distribution<int64_t> dis(a,b);
+    std::uniform_int_distribution<int64_t> dis(a, b);
     return dis(rng);
 }
 
 int64_t RandomNumber(int64_t n, std::mt19937_64 &rng) {
-    return RandomNumber(1,n,rng);
+    return RandomNumber(1, n, rng);
 }
 
 void RunCode(int timeLimit,int testCase) {
@@ -123,7 +123,9 @@ bool Judge(int testCase){
         systemAns += tp;
     }
 
-    std::cerr << " ";
+    userOutput.close();
+    userOutput.open("./TestCase/sol" + std::to_string(testCase) + ".out");
+
     return systemAns == userAns;
 }
 
@@ -263,7 +265,7 @@ void RunSolution(){
 
     std::cerr << "\n";
     if(allCorrect) {
-        std::ifstream AC("AC");
+        std::ifstream AC("Result/AC");
         std::string line;
         while(getline(AC, line)) {
             std::cerr << line << "\n";
@@ -271,7 +273,7 @@ void RunSolution(){
         }
         std::cerr << std::flush;
     } else if(statusFlag & TIME_OUT) {
-        std::ifstream TLE("TLE");
+        std::ifstream TLE("Result/TLE");
         std::string line;
         while(std::getline(TLE, line)) {
             std::cerr << line << "\n";
@@ -279,7 +281,7 @@ void RunSolution(){
         }
         std::cerr << std::flush;
     } else if(statusFlag & RUNTIME_ERROR) {
-        std::ifstream RE("RE");
+        std::ifstream RE("Result/RE");
         std::string line;
         while(std::getline(RE, line)) {
             std::cerr << line << "\n";
@@ -287,7 +289,7 @@ void RunSolution(){
         }
         std::cerr << std::flush;
     } else {
-        std::ifstream WA("WA");
+        std::ifstream WA("Result/WA");
         std::string line;
         while(getline(WA, line)) {
             std::cerr << line << "\n";

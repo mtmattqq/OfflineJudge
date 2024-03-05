@@ -30,6 +30,11 @@ public :
     int64_t operator()(int64_t n) {
         return rand_int(n);
     }
+
+    char rand_char() {
+        char lower{int(rand_int('a', 'z'))}
+        return ;
+    }
 };
 
 #endif
