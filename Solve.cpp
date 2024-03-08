@@ -1,5 +1,5 @@
 // 以下請新增 include 項目
-#include<bits/stdc++.h>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -7,6 +7,4 @@ int main() {
     int a, b;
     cin >> a >> b;
     cout << a + b;
-    int *i{nullptr};
-    (*i) = 0;
 }
