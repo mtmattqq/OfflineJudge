@@ -1,5 +1,5 @@
-#include "main.h"
+#include "./src/main.h"
 
-int main(){
+int main(void) {
     RunSolution();
 }

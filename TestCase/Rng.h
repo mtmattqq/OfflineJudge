@@ -32,8 +32,9 @@ public :
     }
 
     char rand_char() {
-        char lower{int(rand_int('a', 'z'))}
-        return ;
+        char lower{char(rand_int('a', 'z'))}, upper{char(rand_int('A', 'Z'))};
+        char ret[]{lower, upper};
+        return ret[rand_int(0, 1)];
     }
 };
 

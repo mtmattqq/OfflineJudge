@@ -7,6 +7,6 @@ int main() {
     int a, b;
     cin >> a >> b;
     cout << a + b;
-    // chrono::milliseconds s(100);
-    // this_thread::sleep_for(s);
+    int *i{nullptr};
+    (*i) = 0;
 }

@@ -11,6 +11,8 @@
 #include <vector>
 #include <thread>
 #include <iomanip>
+#include <map>
+#include "color.h"
 
 using time_point = std::chrono::steady_clock::time_point;
 
@@ -46,7 +48,7 @@ void RunCode(int timeLimit,int testCase) {
     int exec_status = std::system(file.c_str());
 
     if(currentTest != testCase) {
-        costTime.emplace_back(timeLimit + 50);
+        costTime[testCase] = timeLimit + 50;
         return;
     }
 
@@ -68,14 +70,14 @@ void RunCode(int timeLimit,int testCase) {
     }
 
     status = SUCCESS;
-    costTime.emplace_back(time_cost);
+    costTime[testCase] = time_cost;
     return;
 }
 
 int RunTestCase(int testCase, int timeLimit){
     std::string fileNum = std::to_string(testCase);
 
-    status = -1;
+    status = TIME_OUT;
     isfinish = false;
     currentTest = testCase;
     std::thread run{RunCode, timeLimit, testCase};
@@ -87,17 +89,14 @@ int RunTestCase(int testCase, int timeLimit){
         int64_t time_cost = 
             std::chrono::duration_cast<std::chrono::milliseconds>(now - start)
             .count();
-        if(time_cost > timeLimit) {
+        if(time_cost > timeLimit * 2)
             break;
-        }
     }
-
-    // chrono::milliseconds s(timeLimit+20);
-    // this_thread::sleep_for(s);
     
     if(!isfinish) {
         status = TIME_OUT;
         run.detach();
+        costTime[testCase] = timeLimit + 50;
         return TIME_OUT;
     } else {
         run.join();
@@ -111,21 +110,12 @@ bool Judge(int testCase){
     std::ifstream answer("./TestCase/" + std::to_string(testCase) + ".out");
 
     std::string tp,userAns,systemAns;
-
-    while(userOutput >> tp) {
+    while(userOutput >> tp) 
         userAns += tp;
-        if(userAns.size() > 10000000) {
-            return false;
-        }
-    }
-
-    while(answer>>tp) {
+    while(answer>>tp) 
         systemAns += tp;
-    }
-
     userOutput.close();
     userOutput.open("./TestCase/sol" + std::to_string(testCase) + ".out");
-
     return systemAns == userAns;
 }
 
@@ -202,22 +192,66 @@ double FixTimeLimit(int timeLimit) {
     return multiplier;
 }
 
-void RunSolution(){
+void ReadProblemInfo(int &testCases, int &timeLimit, std::string &problemID) {
     std::ifstream log("./TestCase/log.txt");
-
-    std::string recycle, problemID;
-    int testCases, timeLimit;
-    double multiplier;
-
+    std::string recycle;
     log >> recycle >> testCases;
     log >> recycle >> timeLimit;
     log >> recycle >> problemID;
+}
+
+void ShowTotalResult(bool allCorrect, int statusFlag, std::ostream &output) {
+    if(allCorrect) {
+        std::ifstream AC("Result/AC");
+        std::string line;
+        std::cerr << Color(0x7A, 0xFF, 0x77);
+        while(getline(AC, line)) {
+            std::cerr << line << "\n";
+            output << line << "\n";
+        }
+        std::cerr << RESET " " << std::flush;
+    } else if(statusFlag & TIME_OUT) {
+        std::ifstream TLE("Result/TLE");
+        std::string line;
+        std::cerr << Color(0x9F, 0xE2, 0xFF);
+        while(std::getline(TLE, line)) {
+            std::cerr << line << "\n";
+            output << line << "\n";
+        }
+        std::cerr << RESET " " << std::flush;
+    } else if(statusFlag & RUNTIME_ERROR) {
+        std::ifstream RE("Result/RE");
+        std::string line;
+        std::cerr << Color(0xAE, 0x9F, 0xFF);
+        while(std::getline(RE, line)) {
+            std::cerr << line << "\n";
+            output << line << "\n";
+        }
+        std::cerr << RESET " " << std::flush;
+    } else {
+        std::ifstream WA("Result/WA");
+        std::string line;
+        std::cerr << Color(0xFF, 0x41, 0x41);
+        while(getline(WA, line)) {
+            std::cerr << line << "\n";
+            output << line << "\n";
+        }
+        std::cerr << RESET " " << std::flush;
+    }
+}
+
+void RunSolution() {
+    std::string problemID;
+    int testCases, timeLimit;
+    double multiplier;
+
+    ReadProblemInfo(testCases, timeLimit, problemID);
+    costTime.resize(testCases + 1);
 
     std::ofstream output("output.info");
 
     std::cerr << "Problem ID : " << problemID << "\n";
     std::cerr << "There're " << testCases << " testcases." << "\n\n";
-    
 
     output << "Problem ID : " << problemID << "\n";
     output << "There're " << testCases << " testcases." << "\n";
@@ -235,7 +269,6 @@ void RunSolution(){
     }
 
     multiplier = FixTimeLimit(timeLimit);
-
     timeLimit *= multiplier;
 
     std::cerr << "Running TestCase..." << "\n";
@@ -256,7 +289,7 @@ void RunSolution(){
         if(outputStatus[i] == SUCCESS) {
             outputStatus[i] = Judge(i);
         }
-        correct += outputStatus[i] == AC;
+        correct += (outputStatus[i] == AC);
         if(outputStatus[i] != AC) {
             allCorrect = false;
         }
@@ -264,41 +297,9 @@ void RunSolution(){
     }
 
     std::cerr << "\n";
-    if(allCorrect) {
-        std::ifstream AC("Result/AC");
-        std::string line;
-        while(getline(AC, line)) {
-            std::cerr << line << "\n";
-            output << line << "\n";
-        }
-        std::cerr << std::flush;
-    } else if(statusFlag & TIME_OUT) {
-        std::ifstream TLE("Result/TLE");
-        std::string line;
-        while(std::getline(TLE, line)) {
-            std::cerr << line << "\n";
-            output << line << "\n";
-        }
-        std::cerr << std::flush;
-    } else if(statusFlag & RUNTIME_ERROR) {
-        std::ifstream RE("Result/RE");
-        std::string line;
-        while(std::getline(RE, line)) {
-            std::cerr << line << "\n";
-            output << line << "\n";
-        }
-        std::cerr << std::flush;
-    } else {
-        std::ifstream WA("Result/WA");
-        std::string line;
-        while(getline(WA, line)) {
-            std::cerr << line << "\n";
-            output << line << "\n";
-        }
-        std::cerr << std::flush;
-    }
-
-    std::string ret[20];
+    
+    ShowTotalResult(allCorrect, statusFlag, output);
+    std::map<int, std::string> ret;
     ret[WA] = "WA";
     ret[AC] = "AC";
     ret[TIME_OUT] = "TLE";
@@ -307,16 +308,16 @@ void RunSolution(){
     output << "For each testcase : " << "\n\n";
 
     for(int i = 1; i <= testCases; ++i) {
-        costTime[i - 1] /= multiplier;
+        costTime[i] /= multiplier;
     }
 
     for(int i = 1; i <= testCases; ++i) {
         std::cerr << std::right << std::setw(3) << i << ". " << std::flush;
         std::cerr << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
-        std::cerr << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
+        std::cerr << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
         output << std::right << std::setw(3) << i << ". " << std::flush;
         output << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
-        output << "Execution time : " << std::right << std::setw(4) << costTime[i - 1] << " ms" << std::endl;
+        output << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
     }
     std::cerr << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
     output << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
