@@ -1,6 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <sys/resource.h>
 #include <iostream>
 #include <fstream>
 #include <cstdint>
@@ -42,6 +43,11 @@ void RunCode(int timeLimit,int testCase) {
     std::string file = 
         "./Sol < ./TestCase/" + std::to_string(testCase) + ".in" + 
         "> ./TestCase/sol" + std::to_string(testCase) + ".out";
+    
+    struct rlimit limit;
+    limit.rlim_cur = 256 * 1024 * 1024; // 256 MB
+    limit.rlim_max = 256 * 1024 * 1024;
+    setrlimit(RLIMIT_AS, &limit);
 
     time_point start = std::chrono::steady_clock::now();
     
