@@ -2,6 +2,8 @@
 #define MAIN_H
 
 #include <sys/resource.h>
+#include <unistd.h>
+
 #include <iostream>
 #include <fstream>
 #include <cstdint>
@@ -17,15 +19,16 @@
 
 using time_point = std::chrono::steady_clock::time_point;
 
-bool isfinish = false;
-int status = 0, currentTest = 0;
+bool isfinish{false};
+int status{0}, currentTest{0};
 std::vector<int> costTime;
-const int CODE_LENGTH = 12;
-const int SUCCESS = 0;
-const int AC = 1;
-const int WA = 2;
-const int TIME_OUT = 4;
-const int RUNTIME_ERROR = 8;
+const int CODE_LENGTH{12};
+const int SUCCESS{0};
+const int AC{1};
+const int WA{2};
+const int TIME_OUT{4};
+const int RUNTIME_ERROR{8};
+const int MEMORY_OUT{16};
 
 int64_t RandomNumber(int64_t a, int64_t b, std::mt19937_64 &rng) {
     std::uniform_int_distribution<int64_t> dis(a, b);
@@ -41,17 +44,20 @@ void RunCode(int timeLimit,int testCase) {
     status = TIME_OUT;
 
     std::string file = 
-        "./Sol < ./TestCase/" + std::to_string(testCase) + ".in" + 
-        "> ./TestCase/sol" + std::to_string(testCase) + ".out";
+        "./Sol < ./TestCase/" + std::to_string(testCase) + ".in " + 
+        "1> ./TestCase/sol" + std::to_string(testCase) + ".out " + 
+        "2> ./TestCase/err" + std::to_string(testCase) + ".err";
     
-    struct rlimit limit;
-    limit.rlim_cur = 256 * 1024 * 1024; // 256 MB
-    limit.rlim_max = 256 * 1024 * 1024;
-    setrlimit(RLIMIT_AS, &limit);
+    // Set Memory Limit
+    const int KB{1024}, MB{1048576};
+    struct rlimit max_memory;
+    max_memory.rlim_cur = 256 * MB; // 256 MB
+    max_memory.rlim_max = 256 * MB;
+    setrlimit(RLIMIT_AS, &max_memory);
 
     time_point start = std::chrono::steady_clock::now();
     
-    int exec_status = std::system(file.c_str());
+    int exec_status{std::system(file.c_str())};
 
     if(currentTest != testCase) {
         costTime[testCase] = timeLimit + 50;
@@ -120,8 +126,7 @@ bool Judge(int testCase){
         userAns += tp;
     while(answer>>tp) 
         systemAns += tp;
-    userOutput.close();
-    userOutput.open("./TestCase/sol" + std::to_string(testCase) + ".out");
+    // std::ofstream clearOutput("./TestCase/sol" + std::to_string(testCase) + ".out");
     return systemAns == userAns;
 }
 
@@ -180,7 +185,7 @@ double FindComputerSpeed() {
 }
 
 double FixTimeLimit(int timeLimit) {
-    std::cerr << "Fixing the time limit..." << "\n";
+    std::cout << "Fixing the time limit..." << "\n";
     
     const int TEST_NUM = 5;
     double average = 0;
@@ -192,7 +197,7 @@ double FixTimeLimit(int timeLimit) {
     const double MY_TIME_COST = 0.3495;
     double multiplier = average / MY_TIME_COST;
 
-    std::cerr << "Your Computer run " << std::setprecision(2) << 1.0 / multiplier 
+    std::cout << "Your Computer run " << std::setprecision(2) << 1.0 / multiplier 
          << " time \nas fast as the judge." << "\n\n";
 
     return multiplier;
@@ -206,43 +211,98 @@ void ReadProblemInfo(int &testCases, int &timeLimit, std::string &problemID) {
     log >> recycle >> problemID;
 }
 
+bool CompileSolution() {
+    int compile_status = std::system("g++ Solve.cpp -O2 -o Sol");
+    if(compile_status != 0) {
+        std::cout << "Compilation failed.\n";
+        std::ifstream CE("CE");
+        std::string line;
+        while(std::getline(CE, line)) {
+            std::cout << line << "\n";
+        }
+        std::cout << std::flush;
+        return false;
+    }
+    return true;
+}
+
 void ShowTotalResult(bool allCorrect, int statusFlag, std::ostream &output) {
     if(allCorrect) {
         std::ifstream AC("Result/AC");
         std::string line;
-        std::cerr << Color(0x7A, 0xFF, 0x77);
+        std::cout << Color(0x7A, 0xFF, 0x77);
         while(getline(AC, line)) {
-            std::cerr << line << "\n";
+            std::cout << line << "\n";
             output << line << "\n";
         }
-        std::cerr << RESET " " << std::flush;
+        std::cout << RESET " " << std::flush;
     } else if(statusFlag & TIME_OUT) {
         std::ifstream TLE("Result/TLE");
         std::string line;
-        std::cerr << Color(0x9F, 0xE2, 0xFF);
+        std::cout << Color(0x9F, 0xE2, 0xFF);
         while(std::getline(TLE, line)) {
-            std::cerr << line << "\n";
+            std::cout << line << "\n";
             output << line << "\n";
         }
-        std::cerr << RESET " " << std::flush;
+        std::cout << RESET " " << std::flush;
+    } else if(statusFlag & MEMORY_OUT) {
+        std::ifstream MLE("Result/MLE");
+        std::string line;
+        std::cout << Color(0x99, 0xE8, 0xE6);
+        while(std::getline(MLE, line)) {
+            std::cout << line << "\n";
+            output << line << "\n";
+        }
+        std::cout << RESET " " << std::flush;
     } else if(statusFlag & RUNTIME_ERROR) {
         std::ifstream RE("Result/RE");
         std::string line;
-        std::cerr << Color(0xAE, 0x9F, 0xFF);
+        std::cout << Color(0xAE, 0x9F, 0xFF);
         while(std::getline(RE, line)) {
-            std::cerr << line << "\n";
+            std::cout << line << "\n";
             output << line << "\n";
         }
-        std::cerr << RESET " " << std::flush;
+        std::cout << RESET " " << std::flush;
     } else {
         std::ifstream WA("Result/WA");
         std::string line;
-        std::cerr << Color(0xFF, 0x41, 0x41);
+        std::cout << Color(0xFF, 0x41, 0x41);
         while(getline(WA, line)) {
-            std::cerr << line << "\n";
+            std::cout << line << "\n";
             output << line << "\n";
         }
-        std::cerr << RESET " " << std::flush;
+        std::cout << RESET " " << std::flush;
+    }
+}
+
+bool CheckMLE(int testCase) {
+    std::ifstream fi("./TestCase/err" + std::to_string(testCase) + ".err");
+    std::string word;
+    while(fi >> word) if(word == "std::bad_alloc") return true;
+    return false;
+}
+
+void ShowIndividualResult(int testCases, std::vector<int> &outputStatus, double multiplier, std::ostream &output) {
+    std::map<int, std::string> ret;
+    ret[WA] = "WA";
+    ret[AC] = "AC";
+    ret[TIME_OUT] = "TLE";
+    ret[RUNTIME_ERROR] = "RE";
+    ret[MEMORY_OUT] = "MLE";
+    std::cout << "For each testcase : " << "\n\n";
+    output << "For each testcase : " << "\n\n";
+
+    for(int i = 1; i <= testCases; ++i) {
+        costTime[i] /= multiplier;
+    }
+
+    for(int i = 1; i <= testCases; ++i) {
+        std::cout << std::right << std::setw(3) << i << ". " << std::flush;
+        std::cout << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
+        std::cout << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
+        output << std::right << std::setw(3) << i << ". " << std::flush;
+        output << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
+        output << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
     }
 }
 
@@ -256,36 +316,26 @@ void RunSolution() {
 
     std::ofstream output("output.info");
 
-    std::cerr << "Problem ID : " << problemID << "\n";
-    std::cerr << "There're " << testCases << " testcases." << "\n\n";
+    std::cout << "Problem ID : " << problemID << "\n";
+    std::cout << "There're " << testCases << " testcases." << "\n\n";
 
     output << "Problem ID : " << problemID << "\n";
     output << "There're " << testCases << " testcases." << "\n";
 
-    int compile_status = std::system("g++ Solve.cpp -O2 -o Sol");
-    if(compile_status != 0) {
-        std::cerr << "Compilation failed.\n";
-        std::ifstream CE("CE");
-        std::string line;
-        while(std::getline(CE, line)) {
-            std::cerr << line << "\n";
-        }
-        std::cerr << std::flush;
-        return;
-    }
+    if(!CompileSolution()) return;
 
     multiplier = FixTimeLimit(timeLimit);
     timeLimit *= multiplier;
 
-    std::cerr << "Running TestCase..." << "\n";
+    std::cout << "Running TestCase..." << "\n";
 
     std::vector<int> outputStatus(testCases + 1);
     for(int i = 1; i <= testCases; ++i) {
         int st = RunTestCase(i, timeLimit);
         outputStatus[i] = st;
-        std::cerr << i << " ";
+        std::cout << i << " ";
     }
-    std::cerr << "\n\n";
+    std::cout << "\n\n";
 
     int correct = 0;
     bool allCorrect = true;
@@ -295,6 +345,9 @@ void RunSolution() {
         if(outputStatus[i] == SUCCESS) {
             outputStatus[i] = Judge(i);
         }
+        if(outputStatus[i] == RUNTIME_ERROR && CheckMLE(i)) {
+            outputStatus[i] = MEMORY_OUT;
+        }
         correct += (outputStatus[i] == AC);
         if(outputStatus[i] != AC) {
             allCorrect = false;
@@ -302,38 +355,20 @@ void RunSolution() {
         statusFlag |= outputStatus[i];
     }
 
-    std::cerr << "\n";
+    std::cout << "\n";
     
     ShowTotalResult(allCorrect, statusFlag, output);
-    std::map<int, std::string> ret;
-    ret[WA] = "WA";
-    ret[AC] = "AC";
-    ret[TIME_OUT] = "TLE";
-    ret[RUNTIME_ERROR] = "RE";
-    std::cerr << "For each testcase : " << "\n\n";
-    output << "For each testcase : " << "\n\n";
+    ShowIndividualResult(testCases, outputStatus, multiplier, output);
 
-    for(int i = 1; i <= testCases; ++i) {
-        costTime[i] /= multiplier;
-    }
-
-    for(int i = 1; i <= testCases; ++i) {
-        std::cerr << std::right << std::setw(3) << i << ". " << std::flush;
-        std::cerr << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
-        std::cerr << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
-        output << std::right << std::setw(3) << i << ". " << std::flush;
-        output << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
-        output << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
-    }
-    std::cerr << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
+    std::cout << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
     output << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
 
-    std::cerr << std::endl;
+    std::cout << std::endl;
     output << std::endl;
 
     if(allCorrect) {
         std::string code = Encode();
-        std::cerr<<"AC code : " << code << std::endl;
+        std::cout<<"AC code : " << code << std::endl;
         output << "AC code : " << code << std::endl;
     }
 }
