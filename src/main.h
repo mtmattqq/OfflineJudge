@@ -15,6 +15,7 @@
 #include <thread>
 #include <iomanip>
 #include <map>
+#include <pthread.h>
 #include "color.h"
 
 using time_point = std::chrono::steady_clock::time_point;
@@ -107,7 +108,9 @@ int RunTestCase(int testCase, int timeLimit){
     
     if(!isfinish) {
         status = TIME_OUT;
-        run.detach();
+        pthread_cancel(run.native_handle());
+        system("fuser -k ./Sol");
+        run.join();
         costTime[testCase] = timeLimit + 50;
         return TIME_OUT;
     } else {

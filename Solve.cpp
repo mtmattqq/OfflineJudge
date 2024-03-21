@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <chrono>
 using namespace std;
 
 int main() {
@@ -10,8 +11,8 @@ int main() {
     cin >> a >> b;
     cout << a + b;
     if(a != 100) return 0;
-    vector<int64_t> v;
-    for(int i{0}; i < 100000000; ++i) {
-        v.push_back(i);
+    while(true) {
+        cerr << "I am here.";
+        this_thread::sleep_for(chrono::milliseconds(3000));
     }
 }
