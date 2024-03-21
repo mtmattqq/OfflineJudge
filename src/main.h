@@ -119,7 +119,7 @@ int RunTestCase(int testCase, int timeLimit){
     }
 }
 
-bool Judge(int testCase){
+int Judge(int testCase){
     std::ifstream userOutput("./TestCase/sol" + std::to_string(testCase) + ".out");
     std::ifstream question("./TestCase/" + std::to_string(testCase) + ".in");
     std::ifstream answer("./TestCase/" + std::to_string(testCase) + ".out");
@@ -130,7 +130,7 @@ bool Judge(int testCase){
     while(answer>>tp) 
         systemAns += tp;
     // std::ofstream clearOutput("./TestCase/sol" + std::to_string(testCase) + ".out");
-    return systemAns == userAns;
+    return (systemAns == userAns ? AC : WA);
 }
 
 std::string Encode(){
