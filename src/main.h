@@ -320,7 +320,7 @@ void RunSolution() {
     std::ofstream output("output.info");
 
     std::cout << "Problem ID : " << problemID << "\n";
-    std::cout << "There're " << testCases << " testcases." << "\n\n";
+    std::cout << "There're " << testCases << " testcases." << "\n" << std::endl;
 
     output << "Problem ID : " << problemID << "\n";
     output << "There're " << testCases << " testcases." << "\n";
@@ -336,9 +336,8 @@ void RunSolution() {
     for(int i = 1; i <= testCases; ++i) {
         int st = RunTestCase(i, timeLimit);
         outputStatus[i] = st;
-        std::cout << i << " ";
+        std::cout << i << " " << std::flush;
     }
-    std::cout << "\n\n";
 
     int correct = 0;
     bool allCorrect = true;
