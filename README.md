@@ -8,17 +8,17 @@
 
 一題會是一個資料夾，裡面會有隱藏檔案和非隱藏檔案。
 
-| 檔案名稱 | 大致內容 | 是否隱藏 |
-| --- | --- | --- |
-| AC | ascii art 的 AC 字樣 | True |
-| WA | ascii art 的 WA 字樣 | True |
-| TLE | ascii art 的 TLE 字樣 | True |
-| main.h | 主要程式 | 不用附給使用者 |
-| Run.cpp | 執行程式 | 不用附給使用者 |
+| 檔案名稱 | 大致內容 |
+| --- | --- |
+| Result | ascii art 的 AC, WA, TLE, RE, MLE 字樣 |
+| WA | ascii art 的 WA 字樣 |
+| TLE | ascii art 的 TLE 字樣 |
+| main.h | 主要評測程式碼 |
+| Run.cpp | 執行程式 |
 | Run.exe | 執行程式 | False |
-| Solve.cpp | 使用者的程式 | False |
-| Description | 題目敘述 | False |
-| README.md | 說明使用方法(如下) | False |
+| Solve.cpp | 使用者的程式 |
+| Description | 題目敘述 |
+| README.md | 說明使用方法(如下) |
 
 ### README.txt 內文
 
@@ -42,7 +42,7 @@
 
 #### 貼心小提醒
 
-由於 Solve 函式會被重複使用，因此變數就算開在全域也要記得初始化(現版本已經不需要)
+預設使用`g++`編譯。
 
 ### 截圖
 
@@ -50,16 +50,17 @@
 
 ## 使用(出題者)
 
-資料夾中還含有一個隱藏資料夾 TestCase，裡面存放有測試資料。裡面的檔案如下
+TestCase 裡面存放有測試資料。裡面的檔案如下
 
 | 檔案名稱 | 大致內容 |
 | --- | --- |
 | Gen.cpp | 預設的測試資料生成程式 |
 | GraphGen.h | 圖論測資生成程式 ( [使用介紹](https://mtmatt.page/misc/the-test-case-builder-of-graph-theory/) ) |
-| Sol.cpp | 官解檔 |
+| rng.h | 不是很優秀的隨機 |
+| Sol.cpp | 官解檔(生完測資後可以移除) |
 | log.txt | 測試資料們的基本資料 |
 
-### Gen.cpp
+### Gen.cpp --待更新
 
 介紹各個函式的功能
 
