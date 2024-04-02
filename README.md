@@ -66,12 +66,15 @@ TestCase 裡面存放有測試資料。裡面的檔案如下
 
 | 函式 | 功能 |
 | --- | --- |
-| RandomNumber(long long a,long long b) | 生成一個隨機數 ( 範圍\[a,b\] ) |
-| RandomNumber(long long n) | 生成一個隨機數 ( 範圍\[1,n\] ) |
 | solve() | 共用解答函式(會調用Sol.cpp) |
 | SubTesk1(int a) | 生成第 a 筆測資 |
 
-如果覺得 RandomNumber 太長，GraphGen.h 裡面有相同功能的函式 Rand
+### Rng.h
+
+| 函式 | 功能 |
+| --- | --- |
+| random_number_generater::operator() | 生成隨機數 |
+| random_number_generater::rand_char() | 隨機字元 |
 
 ### log.txt
 
