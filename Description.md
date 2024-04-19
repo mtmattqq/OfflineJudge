@@ -17,10 +17,13 @@ An integer repersent $A+B$.
 ## Samples
 
 ### Sample Input 1
+
 ```
 1 2
 ```
+
 ### Sample Output 1
+
 ```
 3
 ```
