@@ -46,7 +46,7 @@ void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promi
 
     time_point start = std::chrono::steady_clock::now();
     
-    int exec_status{std::system(file.c_str())};
+    int execStatus{std::system(file.c_str())};
 
     time_point end = std::chrono::steady_clock::now();
 
@@ -55,7 +55,7 @@ void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promi
 
     timeCost.set_value(t);
 
-    if(exec_status != 0) {
+    if(execStatus != 0) {
         status.set_value(RUNTIME_ERROR);
         return;
     }
