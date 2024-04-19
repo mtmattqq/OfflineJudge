@@ -1,46 +1,17 @@
 # OfflineJudge
-
 ## 前言
 
 當初我同學有在架設我們學校的線上評測系統，而一開始我們的系統非常不穩定，因此，他想到可以寫離線的程式答題系統緩解我們上課的需求。而我看到這個系統，我覺得這是一個不錯的想法，並依此加以改良，新增 TLE 判定和超時時會強制停止。
 
+### 更新
+
+為了可以被其他程式重複使用，於是我新增了更多的保護機制。例如移除所有全域變數，強制刪除 TLE 的進程。
+
 ## 使用(解題者)
 
-一題會是一個資料夾，裡面會有隱藏檔案和非隱藏檔案。
+出題者應該會提供已經編譯好的Run。請將你的答案寫入Solve.cpp，接著直接執行./Run即可。
 
-| 檔案名稱 | 大致內容 |
-| --- | --- |
-| Result | ascii art 的 AC, WA, TLE, RE, MLE 字樣 |
-| WA | ascii art 的 WA 字樣 |
-| TLE | ascii art 的 TLE 字樣 |
-| main.h | 主要評測程式碼 |
-| Run.cpp | 執行程式 |
-| Run.exe | 執行程式 | False |
-| Solve.cpp | 使用者的程式 |
-| Description | 題目敘述 |
-| README.md | 說明使用方法(如下) |
-
-### README.txt 內文
-
-#### 以下說明檔案功能及用法
-
-1. 編譯並執行 Run.cpp 可以獲得評測結果
-2. 程式碼請寫在 Solve.cpp 裡面
-3. 題目敘述在 Description 裡面，一般應該是 .txt，.md 或 .pdf
-4. 標準輸入輸出用 cin 和 cout 就可以了
-
-#### 以下說明答題結果
-
-1. AC 作答正確
-2. WA 輸出結果錯誤，或不符合題目要求
-3. TLE 執行時間過長
-4. 程式跳掉 一般來說都是 RE(runtime error)
-
-#### 以下規定請勿違反
-
-1. 擅自更改除 Solve 以外的檔案
-
-#### 貼心小提醒
+### 貼心小提醒
 
 預設使用`g++`編譯。
 
@@ -60,7 +31,7 @@ TestCase 裡面存放有測試資料。裡面的檔案如下
 | Sol.cpp | 官解檔(生完測資後可以移除) |
 | log.txt | 測試資料們的基本資料 |
 
-### Gen.cpp --待更新
+### Gen.cpp
 
 介紹各個函式的功能
 
@@ -73,8 +44,15 @@ TestCase 裡面存放有測試資料。裡面的檔案如下
 
 | 函式 | 功能 |
 | --- | --- |
-| random_number_generater::operator() | 生成隨機數 |
-| random_number_generater::rand_char() | 隨機字元 |
+| random_number_generater::operator(int n) | 生成隨機數，範圍 [1, n] |
+| random_number_generater::operator(int a, int b) | 生成隨機數，範圍 [a, b] |
+| random_number_generater::rand_char() | 隨機字母 |
+
+```cpp
+int seed = 1256;
+random_number_generater rng(seed);
+std::cout << rng(10) << " " << rng(10, 20) << " " << rng.rand_char();
+```
 
 ### log.txt
 
@@ -90,11 +68,11 @@ ProblemID: Default
 
 | 函式 | 功能 |
 | --- | --- |
-| RunCode(int timeLimit) | 執行使用者程式(會計算時間，盡量減少多餘程式碼) |
-| RunTestCase(int testCase,int timeLimit) | 完成執行第 testCase 筆測試資料所需的前置條件 |
-| Judge(int testCase) | 評判解答正確性 |
-| RunSolution() | 執行所有測試並輸出結果 |
-| Encode() | AC時回傳密碼(預設的加密演算法安全性很低，需要修改) |
+| RunCode | 執行使用者程式(會計算時間，盡量減少多餘程式碼) |
+| RunTestCase | 完成執行第 testCase 筆測試資料所需的前置條件 |
+| Judge | 評判解答正確性 |
+| RunSolution | 執行所有測試並輸出結果 |
+| Encode | AC時回傳密碼(預設的加密演算法安全性很低，需要修改) |
 
 ## 競賽中不會出現的 C++ 功能
 
