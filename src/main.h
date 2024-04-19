@@ -39,10 +39,10 @@ void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promi
     
     // Set Memory Limit
     const int KB{1024}, MB{1048576};
-    struct rlimit max_memory;
-    max_memory.rlim_cur = 256 * MB; // 256 MB
-    max_memory.rlim_max = 256 * MB;
-    setrlimit(RLIMIT_AS, &max_memory);
+    struct rlimit maxMemory;
+    maxMemory.rlim_cur = 256 * MB; // 256 MB
+    maxMemory.rlim_max = 256 * MB;
+    setrlimit(RLIMIT_AS, &maxMemory);
 
     time_point start = std::chrono::steady_clock::now();
     
@@ -201,8 +201,8 @@ void ReadProblemInfo(int &testCases, int &timeLimit, std::string &problemID) {
 }
 
 bool CompileSolution() {
-    int compile_status = std::system("g++ Solve.cpp -O2 -o Sol");
-    if(compile_status != 0) {
+    int compileStatus = std::system("g++ Solve.cpp -O2 -o Sol");
+    if(compileStatus != 0) {
         std::cout << "Compilation failed.\n";
         std::ifstream CE("CE");
         std::string line;
