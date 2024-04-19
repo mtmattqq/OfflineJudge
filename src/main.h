@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <future>
+#include <ostream>
 #include <sys/resource.h>
 #include <unistd.h>
 
@@ -20,9 +22,7 @@
 
 using time_point = std::chrono::steady_clock::time_point;
 
-bool isfinish{false};
-int status{0}, currentTest{0};
-std::vector<int> costTime;
+int status{0};
 const int CODE_LENGTH{12};
 const int SUCCESS{0};
 const int AC{1};
@@ -40,10 +40,7 @@ int64_t RandomNumber(int64_t n, std::mt19937_64 &rng) {
     return RandomNumber(1, n, rng);
 }
 
-void RunCode(int timeLimit,int testCase) {
-    isfinish = false;
-    status = TIME_OUT;
-
+void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promise<int> status) {
     std::string file = 
         "./Sol < ./TestCase/" + std::to_string(testCase) + ".in " + 
         "1> ./TestCase/sol" + std::to_string(testCase) + ".out " + 
@@ -60,62 +57,63 @@ void RunCode(int timeLimit,int testCase) {
     
     int exec_status{std::system(file.c_str())};
 
-    if(currentTest != testCase) {
-        costTime[testCase] = timeLimit + 50;
-        return;
-    }
-
-    isfinish = true;
     time_point end = std::chrono::steady_clock::now();
 
+    int64_t t {std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+        .count()};
+
+    timeCost.set_value(t);
+
     if(exec_status != 0) {
-        status = RUNTIME_ERROR;
-        return;
-    }
-    
-    int64_t time_cost = 
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-        .count();
-
-    if(time_cost > timeLimit) {
-        status = TIME_OUT;
+        status.set_value(RUNTIME_ERROR);
         return;
     }
 
-    status = SUCCESS;
-    costTime[testCase] = time_cost;
+    if(t > timeLimit) {
+        status.set_value(TIME_OUT);
+        return;
+    }
+
+    status.set_value(SUCCESS);
     return;
 }
 
-int RunTestCase(int testCase, int timeLimit){
+int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime){
     std::string fileNum = std::to_string(testCase);
 
     status = TIME_OUT;
-    isfinish = false;
-    currentTest = testCase;
-    std::thread run{RunCode, timeLimit, testCase};
+    // isfinish = false;
+
+    std::promise<int> timeCost;
+    std::future<int> futTimeCost {timeCost.get_future()};
+    std::promise<int> status;
+    std::future<int> futStatus {status.get_future()};
+
+    std::thread run{RunCode, timeLimit, testCase, std::move(timeCost), std::move(status)};
 
     time_point start = std::chrono::steady_clock::now();
 
-    while(!isfinish) {
+    std::future_status ready;
+    do {
         time_point now = std::chrono::steady_clock::now();
         int64_t time_cost = 
             std::chrono::duration_cast<std::chrono::milliseconds>(now - start)
             .count();
-        if(time_cost > timeLimit * 2)
+        if(time_cost > timeLimit + 100)
             break;
-    }
+        ready = futTimeCost.wait_for(std::chrono::milliseconds(10));
+    } while(ready != std::future_status::ready);
     
-    if(!isfinish) {
-        status = TIME_OUT;
-        pthread_cancel(run.native_handle());
+    if(ready != std::future_status::ready) {
         system("fuser -k ./Sol");
+        // pthread_cancel(run.native_handle());
         run.join();
         costTime[testCase] = timeLimit + 50;
         return TIME_OUT;
     } else {
+        costTime[testCase] = futTimeCost.get();
         run.join();
-        return status;
+        return futStatus.get();
     }
 }
 
@@ -285,7 +283,13 @@ bool CheckMLE(int testCase) {
     return false;
 }
 
-void ShowIndividualResult(int testCases, std::vector<int> &outputStatus, double multiplier, std::ostream &output) {
+void ShowIndividualResult(
+    int testCases, 
+    std::vector<int> &outputStatus, 
+    std::vector<int> &costTime,
+    double multiplier, 
+    std::ostream &output
+) {
     std::map<int, std::string> ret;
     ret[WA] = "WA";
     ret[AC] = "AC";
@@ -315,7 +319,6 @@ void RunSolution() {
     double multiplier;
 
     ReadProblemInfo(testCases, timeLimit, problemID);
-    costTime.resize(testCases + 1);
 
     std::ofstream output("output.info");
 
@@ -332,9 +335,10 @@ void RunSolution() {
 
     std::cout << "Running TestCase..." << "\n";
 
+    std::vector<int> costTime(testCases + 1);
     std::vector<int> outputStatus(testCases + 1);
     for(int i = 1; i <= testCases; ++i) {
-        int st = RunTestCase(i, timeLimit);
+        int st = RunTestCase(i, timeLimit, costTime);
         outputStatus[i] = st;
         std::cout << i << " " << std::flush;
     }
@@ -360,7 +364,7 @@ void RunSolution() {
     std::cout << "\n";
     
     ShowTotalResult(allCorrect, statusFlag, output);
-    ShowIndividualResult(testCases, outputStatus, multiplier, output);
+    ShowIndividualResult(testCases, outputStatus, costTime, multiplier, output);
 
     std::cout << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
     output << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
