@@ -19,10 +19,10 @@
 #include <map>
 #include <pthread.h>
 #include "color.h"
+#include "rng.h"
 
 using time_point = std::chrono::steady_clock::time_point;
 
-int status{0};
 const int CODE_LENGTH{12};
 const int SUCCESS{0};
 const int AC{1};
@@ -30,15 +30,6 @@ const int WA{2};
 const int TIME_OUT{4};
 const int RUNTIME_ERROR{8};
 const int MEMORY_OUT{16};
-
-int64_t RandomNumber(int64_t a, int64_t b, std::mt19937_64 &rng) {
-    std::uniform_int_distribution<int64_t> dis(a, b);
-    return dis(rng);
-}
-
-int64_t RandomNumber(int64_t n, std::mt19937_64 &rng) {
-    return RandomNumber(1, n, rng);
-}
 
 void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promise<int> status) {
     std::string file = 
@@ -80,9 +71,6 @@ void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promi
 
 int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime){
     std::string fileNum = std::to_string(testCase);
-
-    status = TIME_OUT;
-    // isfinish = false;
 
     std::promise<int> timeCost;
     std::future<int> futTimeCost {timeCost.get_future()};
@@ -143,12 +131,12 @@ std::string Encode(){
         sum += (int)i;
     }
 
-    std::mt19937_64 rng(sum);
+    random_number_generater rng(sum);
     std::string ret;
 
     sum = 0;
     for(int i = 0; i < CODE_LENGTH - 1; ++i) {
-        int a = RandomNumber(100, rng);
+        int a = rng(100);
         sum += a;
         if(a < 10) ret += "0";
         ret += std::to_string(a);
