@@ -25,6 +25,14 @@ const int TIME_OUT{4};
 const int RUNTIME_ERROR{8};
 const int MEMORY_OUT{16};
 
+const std::map<int, Color> RESULT{
+    {AC, Color(0x7A, 0xFF, 0x77)},
+    {TIME_OUT, Color(0x9F, 0xE2, 0xFF)},
+    {RUNTIME_ERROR, Color(0xAE, 0x9F, 0xFF)},
+    {MEMORY_OUT, Color(0x99, 0xE8, 0xE6)},
+    {WA, Color(0xFF, 0x41, 0x41)}
+};
+
 void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promise<int> status) {
     std::string file = 
         "./Sol < ./TestCase/" + std::to_string(testCase) + ".in " + 
@@ -211,45 +219,45 @@ bool CompileSolution() {
 
 void ShowTotalResult(bool allCorrect, int statusFlag, std::ostream &output) {
     if(allCorrect) {
+        std::cout << RESULT.at(AC);
         std::ifstream AC("Result/AC");
         std::string line;
-        std::cout << Color(0x7A, 0xFF, 0x77);
         while(getline(AC, line)) {
             std::cout << line << "\n";
             output << line << "\n";
         }
         std::cout << RESET " " << std::flush;
     } else if(statusFlag & TIME_OUT) {
+        std::cout << RESULT.at(TIME_OUT);
         std::ifstream TLE("Result/TLE");
         std::string line;
-        std::cout << Color(0x9F, 0xE2, 0xFF);
         while(std::getline(TLE, line)) {
             std::cout << line << "\n";
             output << line << "\n";
         }
         std::cout << RESET " " << std::flush;
     } else if(statusFlag & MEMORY_OUT) {
+        std::cout << RESULT.at(MEMORY_OUT);
         std::ifstream MLE("Result/MLE");
         std::string line;
-        std::cout << Color(0x99, 0xE8, 0xE6);
         while(std::getline(MLE, line)) {
             std::cout << line << "\n";
             output << line << "\n";
         }
         std::cout << RESET " " << std::flush;
     } else if(statusFlag & RUNTIME_ERROR) {
+        std::cout << RESULT.at(RUNTIME_ERROR);
         std::ifstream RE("Result/RE");
         std::string line;
-        std::cout << Color(0xAE, 0x9F, 0xFF);
         while(std::getline(RE, line)) {
             std::cout << line << "\n";
             output << line << "\n";
         }
         std::cout << RESET " " << std::flush;
     } else {
+        std::cout << RESULT.at(WA);
         std::ifstream WA("Result/WA");
         std::string line;
-        std::cout << Color(0xFF, 0x41, 0x41);
         while(getline(WA, line)) {
             std::cout << line << "\n";
             output << line << "\n";
@@ -287,7 +295,8 @@ void ShowIndividualResult(
 
     for(int i = 1; i <= testCases; ++i) {
         std::cout << std::right << std::setw(3) << i << ". " << std::flush;
-        std::cout << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
+        std::cout << RESULT.at(outputStatus[i]) << std::flush;
+        std::cout << std::setw(4) << ret[outputStatus[i]] << RESET "  " << std::flush;
         std::cout << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
         output << std::right << std::setw(3) << i << ". " << std::flush;
         output << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
