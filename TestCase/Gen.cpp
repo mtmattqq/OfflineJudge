@@ -26,7 +26,7 @@ int solve(int i) {
     return 0;
 }
 
-void SubTesk1(int a){
+void SubTask1(int a){
     std::string fileName = std::to_string(a);
 
     std::ofstream ques(fileName + ".in");
@@ -36,7 +36,7 @@ void SubTesk1(int a){
     ques << rng(1000) << " " << rng(1000) << "\n";
 }
 
-void SubTesk2(int a){
+void SubTask2(int a){
     std::string fileName = std::to_string(a);
 
     std::ofstream ques(fileName + ".in");
