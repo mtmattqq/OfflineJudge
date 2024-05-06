@@ -65,12 +65,12 @@ int main() {
     time_point start = std::chrono::steady_clock::now();
     
     REP(i, 1, 5) {
-        SubTesk1(i);
+        SubTask1(i);
         std::cerr << "Finishing generating the test " << i << "\n";
     }
 
     REP(i, 6, TEST_CASE) {
-        SubTesk2(i);
+        SubTask2(i);
         std::cerr << "Finishing generating the test " << i << "\n";
     }
 
