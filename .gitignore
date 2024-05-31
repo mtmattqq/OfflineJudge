@@ -34,3 +34,6 @@
 # Test Data
 *.in
 *.err
+
+# Mac
+*.DS
