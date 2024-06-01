@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <sys/resource.h>
 #include <unistd.h>
 #include <future>
@@ -162,12 +163,13 @@ std::string Encode(){
 double FindComputerSpeed() {
     time_point start = std::chrono::steady_clock::now();
 
-    int ans = 0;
+    int ans = 1;
     const int MOD = 37;
     const int TIME = 100000000;
-    for(int i = 0; i < TIME; ++i) {
+    for(int i = 1; i <= TIME; ++i) {
         ans = (ans * i) % MOD;
     }
+    if(ans != 0) throw std::runtime_error("Didn't fix the time limit");
     
     time_point end = std::chrono::steady_clock::now();
 
