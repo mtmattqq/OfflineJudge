@@ -9,21 +9,14 @@
 
 struct Color {
     short red, green, blue;
-    Color();
-    Color(int r, int g, int b);
+    Color(int r = 0, int g = 0, int b = 0)
+    : red(r), green(g), blue(b) {}
     std::string get();
 };
 
 std::ostream& operator<<(std::ostream &out, const Color &color);
 
-Color::Color() {red = green = blue = 0;}
-Color::Color(int r, int g, int b) {
-    red = r;
-    green = g;
-    blue = b;
-}
-
-std::string Color::get() {
+inline std::string Color::get() {
     std::stringstream ss;
     ss << (*this);
     std::string ret;
@@ -31,7 +24,7 @@ std::string Color::get() {
     return ret;
 }
 
-std::ostream& operator<<(std::ostream &out, const Color &color) {
+inline std::ostream& operator<<(std::ostream &out, const Color &color) {
     out << "\e[38;2;" << color.red << ";" << color.green << ";" << color.blue << "m";
     return out;
 }

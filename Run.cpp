@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <stdexcept>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -34,9 +35,29 @@ const std::map<int, Color> RESULT{
     {WA, Color(0xFF, 0x41, 0x41)}
 };
 
-void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promise<int> status) {
+namespace fs = std::filesystem;
+
+struct UserInfo {
+    UserInfo(
+        std::string needCompile = "true", 
+        std::string compileCommand = "make", 
+        std::string executeCommand = "./Solution/Sol"
+    ) : needCompile(needCompile), compileCommand(compileCommand), executeCommand(executeCommand) {}
+    std::string needCompile;
+    std::string compileCommand;
+    std::string executeCommand;
+};
+
+class CompileCommandNotFound: public std::exception {
+public:
+    const char* what() const noexcept {
+        return "Need argument: compile command";
+    }
+};
+
+void RunCode(int timeLimit, int testCase, std::string executeCommand, std::promise<int> timeCost, std::promise<int> status) {
     std::string file = 
-        "./Sol < ./TestCase/" + std::to_string(testCase) + ".in " + 
+        executeCommand + " < ./TestCase/" + std::to_string(testCase) + ".in " + 
         "1> ./TestCase/sol" + std::to_string(testCase) + ".out " + 
         "2> ./TestCase/err" + std::to_string(testCase) + ".err";
     
@@ -72,7 +93,7 @@ void RunCode(int timeLimit, int testCase, std::promise<int> timeCost, std::promi
     return;
 }
 
-int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime){
+int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime, const std::string &executeCommand) {
     std::string fileNum = std::to_string(testCase);
 
     std::promise<int> timeCost;
@@ -80,7 +101,7 @@ int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime){
     std::promise<int> status;
     std::future<int> futStatus {status.get_future()};
 
-    std::thread run{RunCode, timeLimit, testCase, std::move(timeCost), std::move(status)};
+    std::thread run{RunCode, timeLimit, testCase, executeCommand, std::move(timeCost), std::move(status)};
 
     time_point start = std::chrono::steady_clock::now();
 
@@ -96,7 +117,7 @@ int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime){
     } while(ready != std::future_status::ready);
     
     if(ready != std::future_status::ready) {
-        system("fuser -k ./Sol");
+        std::system(("fuser -k " + executeCommand).c_str());
         // pthread_cancel(run.native_handle());
         run.join();
         costTime[testCase] = timeLimit + 50;
@@ -122,17 +143,8 @@ int Judge(int testCase){
     return (systemAns == userAns ? AC : WA);
 }
 
-std::string Encode(){
-    std::ifstream fi("Solve.h");
-    std::string tp,file;
-    while(fi >> tp) {
-        file += tp;
-    }
-
-    int sum = 0;
-    for(auto i : file) {
-        sum += (int)i;
-    }
+std::string Encode() {
+    int sum{int(std::chrono::steady_clock::now().time_since_epoch().count())};
 
     random_number_generater rng(sum);
     std::string ret;
@@ -204,11 +216,13 @@ void ReadProblemInfo(int &testCases, int &timeLimit, std::string &problemID) {
     log >> recycle >> problemID;
 }
 
-bool CompileSolution() {
-    int compileStatus = std::system("g++ Solve.cpp -O2 -o Sol");
+bool CompileSolution(std::string compileCommand) {
+    fs::current_path(fs::current_path() / "Solution");
+    int compileStatus = std::system(compileCommand.c_str());
+    fs::current_path("..");
     if(compileStatus != 0) {
         std::cout << "Compilation failed.\n";
-        std::ifstream CE("CE");
+        std::ifstream CE("Result/CE");
         std::string line;
         while(std::getline(CE, line)) {
             std::cout << line << "\n";
@@ -306,7 +320,7 @@ void ShowIndividualResult(
     }
 }
 
-void RunSolution() {
+void RunSolution(UserInfo userInfo) {
     std::string problemID;
     int testCases, timeLimit;
     double multiplier;
@@ -321,7 +335,8 @@ void RunSolution() {
     output << "Problem ID : " << problemID << "\n";
     output << "There're " << testCases << " testcases." << "\n";
 
-    if(!CompileSolution()) return;
+    if (userInfo.needCompile == "true")
+        if(!CompileSolution(userInfo.compileCommand)) return;
 
     multiplier = FixTimeLimit(timeLimit);
     timeLimit *= multiplier;
@@ -331,7 +346,7 @@ void RunSolution() {
     std::vector<int> costTime(testCases + 1);
     std::vector<int> outputStatus(testCases + 1);
     for(int i = 1; i <= testCases; ++i) {
-        int st = RunTestCase(i, timeLimit, costTime);
+        int st = RunTestCase(i, timeLimit, costTime, userInfo.executeCommand);
         outputStatus[i] = st;
         std::cout << i << " " << std::flush;
     }
@@ -372,10 +387,32 @@ void RunSolution() {
     }
 }
 
-int main(int argc, char *argv[]) {
-    std::vector<std::string> args;
-    for(int i{0}; i < argc; ++i) {
-        args.push_back(argv[i]);
+
+UserInfo GetUserInfo(int argc, char *argv[]) {
+    UserInfo userInfo;
+    if (argc >= 2) {
+        if (std::string(argv[1]) == "true") {
+            if (argc >= 3)
+                userInfo.compileCommand = argv[2];
+            else {
+                throw CompileCommandNotFound();
+            }
+            if (argc >= 4) {
+                userInfo.executeCommand = argv[3];
+            }
+        }
+        else {
+            userInfo.needCompile = "false";
+            if (argc >= 3) {
+                userInfo.executeCommand = argv[2];
+            }
+        }
     }
-    RunSolution();
+    return userInfo;
+}
+
+// * ./Run <need compile> <compile command> <execute command>
+int main(int argc, char *argv[]) {
+    UserInfo userInfo{GetUserInfo(argc, argv)};
+    RunSolution(userInfo);
 }
