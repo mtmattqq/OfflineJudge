@@ -1,9 +1,10 @@
 #include <filesystem>
 #include <stdexcept>
+#include <string>
 #include <sys/resource.h>
 #include <unistd.h>
 #include <future>
-#include <ostream>
+#include <unistd.h>
 
 #include <iostream>
 #include <fstream>
@@ -19,6 +20,7 @@
 
 using time_point = std::chrono::steady_clock::time_point;
 
+const int KB{1024}, MB{1048576};
 const int CODE_LENGTH{12};
 const int SUCCESS{0};
 const int AC{1};
@@ -55,28 +57,49 @@ public:
     }
 };
 
-void RunCode(int timeLimit, int testCase, std::string executeCommand, std::promise<int> timeCost, std::promise<int> status) {
+void RunCode(
+    int timeLimit, int testCase, 
+    std::string executeCommand, 
+    std::promise<int> timeCost, std::promise<int> memoryCost,
+    std::promise<int> status, std::promise<int> pid
+) {
     std::string file = 
         executeCommand + " < ./TestCase/" + std::to_string(testCase) + ".in " + 
         "1> ./TestCase/sol" + std::to_string(testCase) + ".out " + 
         "2> ./TestCase/err" + std::to_string(testCase) + ".err";
     
-    // Set Memory Limit
-    const int KB{1024}, MB{1048576};
-    struct rlimit maxMemory;
-    maxMemory.rlim_cur = 256 * MB; // 256 MB
-    maxMemory.rlim_max = 256 * MB;
-    setrlimit(RLIMIT_AS, &maxMemory);
-
     time_point start = std::chrono::steady_clock::now();
     
-    int execStatus{std::system(file.c_str())};
+    int execStatus{0};
+    int processId = fork();
+    if (processId == 0) {
+        // Set Memory Limit
+        struct rlimit maxMemory;
+        maxMemory.rlim_cur = 256 * MB; // 256 MB
+        maxMemory.rlim_max = 256 * MB;
+        setrlimit(RLIMIT_AS, &maxMemory);
+        int ret{system(file.c_str())}; // Double fork
+        exit(ret);
+    }
+    struct rusage current_usage{0};
+    getrusage(RUSAGE_SELF, &current_usage);
+    struct rusage child_usage{0};
+    pid.set_value(processId);
+    waitpid(processId, &execStatus, 0);
+    getrusage(RUSAGE_CHILDREN, &child_usage);
 
     time_point end = std::chrono::steady_clock::now();
 
     int64_t t {std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
         .count()};
 
+#ifdef __linux__
+    int memoryUsage = child_usage.ru_maxrss - current_usage.ru_maxrss;
+#elif defined(__APPLE__) || defined(__MACH__)
+    int memoryUsage = (child_usage.ru_maxrss - current_usage.ru_maxrss) / KB;
+#endif
+
+    memoryCost.set_value(memoryUsage);
     timeCost.set_value(t);
 
     if(execStatus != 0) {
@@ -93,15 +116,22 @@ void RunCode(int timeLimit, int testCase, std::string executeCommand, std::promi
     return;
 }
 
-int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime, const std::string &executeCommand) {
+int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime, std::vector<int> &costMemory, const std::string &executeCommand) {
     std::string fileNum = std::to_string(testCase);
 
+    std::promise<int> pid;
+    std::future<int> futPid {pid.get_future()};
     std::promise<int> timeCost;
     std::future<int> futTimeCost {timeCost.get_future()};
+    std::promise<int> memoryCost;
+    std::future<int> futMemoryCost {memoryCost.get_future()};
     std::promise<int> status;
     std::future<int> futStatus {status.get_future()};
 
-    std::thread run{RunCode, timeLimit, testCase, executeCommand, std::move(timeCost), std::move(status)};
+    std::thread run{
+        RunCode, timeLimit, testCase, executeCommand, 
+        std::move(timeCost), std::move(memoryCost), std::move(status), std::move(pid)
+    };
 
     time_point start = std::chrono::steady_clock::now();
 
@@ -117,13 +147,14 @@ int RunTestCase(int testCase, int timeLimit, std::vector<int> &costTime, const s
     } while(ready != std::future_status::ready);
     
     if(ready != std::future_status::ready) {
-        std::system(("fuser -k " + executeCommand).c_str());
-        // pthread_cancel(run.native_handle());
+        std::system(("kill -9 " + std::to_string(futPid.get())).c_str());
         run.join();
         costTime[testCase] = timeLimit + 50;
+        costMemory[testCase] = 0;
         return TIME_OUT;
     } else {
         costTime[testCase] = futTimeCost.get();
+        costMemory[testCase] = futMemoryCost.get();
         run.join();
         return futStatus.get();
     }
@@ -292,7 +323,7 @@ bool CheckMLE(int testCase) {
 void ShowIndividualResult(
     int testCases, 
     std::vector<int> &outputStatus, 
-    std::vector<int> &costTime,
+    std::vector<int> &costTime, std::vector<int> &costMemory,
     double multiplier, 
     std::ostream &output
 ) {
@@ -313,10 +344,14 @@ void ShowIndividualResult(
         std::cout << std::right << std::setw(3) << i << ". " << std::flush;
         std::cout << RESULT.at(outputStatus[i]) << std::flush;
         std::cout << std::setw(4) << ret[outputStatus[i]] << RESET "  " << std::flush;
-        std::cout << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
+        std::cout << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" 
+            << "  Memory : " << std::right << std::setw(8) << costMemory[i] << " KB"
+            << std::endl;
         output << std::right << std::setw(3) << i << ". " << std::flush;
         output << std::setw(4) << ret[outputStatus[i]] << "  " << std::flush;
-        output << "Execution time : " << std::right << std::setw(4) << costTime[i] << " ms" << std::endl;
+        output << "Execution time : " << std::right << std::setw(8) << costTime[i] << " ms" 
+            << "  Memory : " << std::right << std::setw(4) << costMemory[i] << " KB"
+            << std::endl;
     }
 }
 
@@ -344,9 +379,10 @@ void RunSolution(UserInfo userInfo) {
     std::cout << "Running TestCase..." << "\n";
 
     std::vector<int> costTime(testCases + 1);
+    std::vector<int> costMemory(testCases + 1);
     std::vector<int> outputStatus(testCases + 1);
     for(int i = 1; i <= testCases; ++i) {
-        int st = RunTestCase(i, timeLimit, costTime, userInfo.executeCommand);
+        int st = RunTestCase(i, timeLimit, costTime, costMemory, userInfo.executeCommand);
         outputStatus[i] = st;
         std::cout << i << " " << std::flush;
     }
@@ -372,7 +408,7 @@ void RunSolution(UserInfo userInfo) {
     std::cout << "\n";
     
     ShowTotalResult(allCorrect, statusFlag, output);
-    ShowIndividualResult(testCases, outputStatus, costTime, multiplier, output);
+    ShowIndividualResult(testCases, outputStatus, costTime, costMemory, multiplier, output);
 
     std::cout << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
     output << "\nTotal score : " << std::fixed << std::setprecision(2) << (double)correct / testCases * 100 << std::endl;
